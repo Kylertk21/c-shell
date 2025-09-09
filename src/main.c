@@ -32,6 +32,10 @@ char **get_input(char *input) {
     return command;
 }
 
+int cd(char *path) {
+    return chdir(path);
+}
+
 int main(void) {
     char **command;
     char *input;
@@ -41,6 +45,17 @@ int main(void) {
     while (1) {
         input = readline("unixsh> ");
         command = get_input(input);
+
+        if (strcmp(command[0], "cd") == 0) {
+            if (cd(command[1]) < 0) {
+                perror(command[1]);
+            }
+
+            continue; //skip fork
+        }
+
+
+
 
         child_pid = fork();
 
