@@ -3,55 +3,66 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <string.h>
-
-
-int fork(void) {
-
-    pid_t child_pid;
-    pid_t wait_result;
-    int stat_loc;
-
-    child_pid = fork();
-    if (child_pid == 0) { // Child PS
-        printf("### Child ###\nCurrent PID: %d and Child PID: %d\n",
-            getpid(), child_pid);
-        sleep(5);
-    } else { // Parent PS
-        wait_result = waitpid(child_pid, &stat_loc, WUNTRACED);
-        printf("### Parent ###\nCurrent PID: %d and Child PID: %d\n",
-            getpid(), child_pid);
-    }
-
-    return 0;
-}
-
+#include <readline/readline.h>
 
 char **get_input(char *input) {
     char **command = malloc(8 * sizeof(char *));
+    if (command == NULL) {
+        perror("malloc failed, insufficient memory");
+        exit(1);
+    }
     char *separator = " ";
     char *parsed;
     int index = 0;
 
-    parsed = strok(input, separator);
+    parsed = strtok(input, separator);
     while (parsed != NULL) {
         command[index] = parsed;
         index++;
 
         parsed = strtok(NULL, separator);
+
+        if (index > 8) {
+            printf("max arguments passed");
+        }
+
     }
 
     command[index] = NULL;
     return command;
 }
 
-
-
-
 int main(void) {
+    char **command;
+    char *input;
+    pid_t child_pid;
+    int stat_loc;
 
-    char *argv[] = {"ls", "-l", "-h", "-a", NULL};
-    execvp(argv[0], argv); // name of command & args passed
+    while (1) {
+        input = readline("unixsh> ");
+        command = get_input(input);
 
+        child_pid = fork();
+
+        if (child_pid < 0) {
+            perror("Fork Failed");
+            exit(1);
+        }
+
+        if (child_pid == 0) { // Child Process
+            /* Never returns if call is successful */
+            execvp(command[0], command);
+            if (execvp(command[0], command) < 0) {
+                perror(command[0]);
+                exit(1);
+            }
+
+            printf("Program exited, execvp unsuccessful");
+        } else {
+            waitpid(child_pid, &stat_loc, WUNTRACED);
+        }
+        free(input);
+        free(command);
+    }
     return 0;
-
 }
