@@ -4,6 +4,15 @@
 #include <sys/wait.h>
 #include <string.h>
 #include <readline/readline.h>
+#include <signal.h>
+
+typedef void (*sighandler_t)(int);
+
+sighandler_t signal(int signum, sighandler_t handler); // signal number, signal handler pointer
+
+void sigint_handler(int signo) {
+    printf("Caught SIGINT\n");
+}
 
 char **get_input(char *input) {
     char **command = malloc(8 * sizeof(char *));
@@ -42,8 +51,11 @@ int main(void) {
     pid_t child_pid;
     int stat_loc;
 
+    signal(SIGINT, sigint_handler);
+    while (1);
+
     while (1) {
-        input = readline("unixsh> ");
+        input = readline("k-shell> ");
         command = get_input(input);
 
         if (strcmp(command[0], "cd") == 0) {
