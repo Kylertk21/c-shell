@@ -54,9 +54,6 @@ int main(void) {
             continue; //skip fork
         }
 
-
-
-
         child_pid = fork();
 
         if (child_pid < 0) {
